@@ -1,0 +1,35 @@
+{
+  "name": "node-mengya",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "license": "MIT",
+  "author": "mengya <996929178@qq.com>",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development && nodemon ./index.js --config nodemon.json",
+    "start": "cross-env NODE_ENV=production pm2 start index.js --name='node-mengya'"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.3",
+    "connect-mongo": "^2.0.1",
+    "debug": "^4.0.1",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "mongodb": "^3.1.6",
+    "multer": "^1.4.0",
+    "pm2": "^3.2.2",
+    "xss": "^1.0.3"
+  },
+  "devDependencies": {
+    "cross-env": "^5.2.0",
+    "eslint": "^5.6.0",
+    "nodemon": "^1.18.4"
+  },
+  "engines": {
+    "node": ">= 8.9.0",
+    "npm": ">= 5.0.0"
+  }
+}
