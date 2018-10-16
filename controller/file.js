@@ -2,8 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const checkLogin = require("../middlewares/checkLogin");
-
-const ROOT_PATH = "C:/Users/zeng/node-mengya/public";
+const root_path = path.resolve(__dirname,"../public");
 
 class File {
     constructor() {
@@ -11,7 +10,21 @@ class File {
             destination(req, file, cb) {
                 const fieldname = file.fieldname;
                 if (/^(avatar|collect|editor|logo)$/.test(fieldname)){
-                    cb(null, path.resolve(ROOT_PATH, fieldname));
+                    fs.stat(`${root_path}/${fieldname}`,(err,stats)=>{
+                        if(err){
+                            fs.mkdir(`${root_path}/${fieldname}`,(err2)=>{
+                                if(err2){
+                                    cb(new Error(`创建${filename}文件失败`));
+                                }
+                                else{
+                                    cb(null, path.resolve(root_path, fieldname));
+                                }
+                            });
+                        }
+                        else{
+                            cb(null, path.resolve(root_path, fieldname));
+                        }
+                    });
                 }else {
                     cb(new Error("表单键名错误"));
                 }     
@@ -24,7 +37,6 @@ class File {
 
         this.upfile = multer({
             storage: storage,
-            //limits: { fileSize: 2000000 }, //限制上传文件大小
             fileFilter(req, file, cb) {
                 if(/^audio\/|^video\/|^image\//.test(file.mimetype)){
                     if (/^image\//.test(file.mimetype) && file.size>2000000) {
@@ -46,20 +58,36 @@ class File {
 
     uploadFile(req, res) {
         const file = req.files[0];
-        res.json({ url: `/${file.fieldname}/${file.filename}`}); //注意端口
+        res.json({ url: `/${file.fieldname}/${file.filename}`});
     }
 
-    async removeFile(req,res,next) {
+    removeFile(req,res,next) {
         if(req.body.url && req.body.folder){
             const { url, folder } = req.body;
             const filename = url.split(`/${folder}/`)[1];
 
             if(/^dafault.png$/.test(filename)===false){
-                fs.unlink(path.resolve(ROOT_PATH,`${folder}/${filename}`),(err) => {
-                    if(err){
-                        return next(err);
+                fs.stat(`${root_path}/${folder}`,(err1,stats)=>{ //判断目录是否存在
+                    if(err1){
+                        fs.mkdir(`${root_path}/${folder}`,(err2)=>{
+                            if(err2){
+                                return next(err2);
+                            }
+                            else {
+                                res.status(200).end();
+                            }
+                        });
                     }
-                    res.status(200).end();
+                    else{
+                        fs.unlink(path.resolve(root_path,`${folder}/${filename}`),(err3) => {
+                            if(err3){
+                                return next(err3);
+                            }
+                            else{
+                                res.status(200).end();
+                            }
+                        });
+                    }
                 });
             }
             else {
