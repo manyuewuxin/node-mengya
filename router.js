@@ -12,7 +12,7 @@ const addRouters = (objRouter) => {
     });
 };
 
- const Scan = () => {
+ const initRourers = () => {
     const url = './controller';
     const dir = fs.readdirSync(url);
 
@@ -23,7 +23,7 @@ const addRouters = (objRouter) => {
 };
 
 const setRouters = () => {
-    Scan();
+    initRourers();
     return router;
 };
 

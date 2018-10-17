@@ -5,7 +5,6 @@ module.exports = {
             required: [
                 "name",
                 "email",
-                "salt",
                 "password",
                 "avatar",
                 "date",
@@ -40,8 +39,7 @@ module.exports = {
                     type: "string"
                 },
                 password: {
-                    type: "string",
-                    pattern: "^[a-zA-Z0-9]{6,15}$"
+                    type: "string"
                 },
                 avatar: {
                     type: "string"
