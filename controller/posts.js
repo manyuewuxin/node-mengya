@@ -13,6 +13,7 @@ class Posts {
         this.getHotPostsList = this.getHotPostsList.bind(this);
         this.getSearch = this.getSearch.bind(this);
         this.removeArticle = this.removeArticle.bind(this);
+        this.getFollowPostsList = this.getFollowPostsList.bind(this);
     }
     setvalue(value) {
         return value;
@@ -30,13 +31,6 @@ class Posts {
         return list;
     }
 
-    getNotFollowtypePosts(followtype, page, limit) {
-        const type = followtype.length > 0 ? { type: { $nin: followtype } } : {};
-        const sort = { date: -1 };
-        const skip = limit || this.page(page, 10);
-        return service.$lookup({ type, sort, skip });
-    }
-
     async getUserPostsList(req, res, next) {
         if (req.session.user && req.query.page && req.query.type === "all") {
             try {
@@ -44,10 +38,10 @@ class Posts {
                 const skip = this.page(req.query.page, 10);
                 const page = Number(req.query.page);
 
-                const { followtype } = await service.getFollowPosts({ user_id });
+                const { followtype } = await service.getFollowTypePosts({ user_id });
 
                 if (!req.session.page) {
-                    const count = await service.getFollowPosts({
+                    const count = await service.getFollowTypePosts({
                         user_id: user_id,
                         get_count: true
                     });
@@ -80,25 +74,15 @@ class Posts {
         }
     }
 
-    async getPostsList(req, res, next) {
-        if (req.query.type && req.query.page) {
-            try {
-                const type = req.query.type === "all" ? {} : { type: req.query.type };
-                const sort = { date: -1 };
-                const skip = this.page(req.query.page, 10);
-                const posts = await service.$lookup({ type, sort, skip });
-                await res.json({ posts });
-            } catch (err) {
-                next(err);
-            }
-        } else {
-            next(ROUTER_ERROR);
-        }
+    getNotFollowtypePosts(followtype, page, limit) {
+        const type = followtype.length > 0 ? { type: { $nin: followtype } } : {};
+        const sort = { date: -1 };
+        const skip = limit || this.page(page, 10);
+        return service.$lookup({ type, sort, skip });
     }
 
-    async getHotPostsList(req, res, next) {
-        //最热
-        if (req.query.hot && req.query.page) {
+    async getHotPostsList(req, res, next) { //热门
+        if (req.query.type==="hot" && req.query.page) {
             try {
                 const type = {};
                 const sort = { read_count: -1, like: -1 };
@@ -109,6 +93,28 @@ class Posts {
                 next(err);
             }
         } else {
+            next();
+        }
+    }
+
+    async getFollowPostsList(req, res, next){
+        if(req.query.type === "follow" && req.query.page){
+            try{
+                const sort = { date: -1 };
+                const skip = this.page(req.query.page, 10);
+                const { following } = await service.getFollowTypePosts({ user_id : req.session.user });
+                if(following.length>0){
+                    const posts = await service.getFollowPostsList({ following, sort, skip });
+                    await res.json({ posts });
+                }
+                else {
+                    await res.json({ posts: [] });
+                }
+            }catch(err){
+                next(err);
+            }
+        }
+        else{
             next();
         }
     }
@@ -131,8 +137,23 @@ class Posts {
         }
     }
 
-    async getArticle(req, res, next) {
-        //获取单个文章
+    async getPostsList(req, res, next) {
+        if (req.query.type && req.query.page) {
+            try {
+                const type = req.query.type === "all" ? {} : { type: req.query.type };
+                const sort = { date: -1 };
+                const skip = this.page(req.query.page, 10);
+                const posts = await service.$lookup({ type, sort, skip });
+                await res.json({ posts });
+            } catch (err) {
+                next(err);
+            }
+        } else {
+            next(ROUTER_ERROR);
+        }
+    }
+
+    async getArticle(req, res, next) { //获取单个文章
         try {
             const posts = await service.getArticle(req.params.posts_id);
             await res.json({ posts });
@@ -316,7 +337,7 @@ class Posts {
 const p = new Posts();
 
 module.exports = {
-    "get /posts": [p.getHotPostsList, p.getSearch, p.getUserPostsList, p.getPostsList],
+    "get /posts": [p.getUserPostsList, p.getHotPostsList, p.getFollowPostsList, p.getSearch, p.getPostsList],
     "get /posts/order": [p.getHotOrderList],
     "get /posts/p/:posts_id": [p.getArticle],
     "get /posts/label": [p.getLabel],

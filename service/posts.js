@@ -38,18 +38,18 @@ class Posts {
         throw new Error("getLabel");
     }
 
-    async getFollowPosts({ user_id, get_count }) {
+    async getFollowTypePosts({ user_id, get_count }) {
         if (typeof user_id == "string") {
-            const { followtype } = await collection.user.findOne(
+            const { followtype, following } = await collection.user.findOne(
                 { _id: new ObjectId(user_id) },
-                { projection: { followtype: 1 } }
+                { projection: { followtype: 1, following: 1 } }
             );
             if (get_count) {
                 return collection.posts
                     .find({ type: { $all: [{ $elemMatch: { $in: followtype } }] } })
                     .count();
             }
-            return { followtype };
+            return { followtype, following };
         }
         throw new Error("getfollowtype");
     }
@@ -148,6 +148,19 @@ class Posts {
             .toArray();
     }
 
+    async getFollowPostsList({ following, sort, skip }){
+        if(
+            Array.isArray(following) && 
+            typeof sort == "object" && 
+            typeof skip == "number"
+        ) {
+            const follow = following.map((user_id)=>new ObjectId(user_id));
+            const type = { author_id: { $in: follow } };
+            return this.$lookup({ type, sort, skip });
+        }
+        throw new Error("getFollowPostsList");
+    }
+    
     async getArticle(posts_id) {
         //获取单个文章
         if (typeof posts_id == "string") {
