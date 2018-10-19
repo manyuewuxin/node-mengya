@@ -9,8 +9,7 @@ class Admin {
         return null;
     }
 
-    async login({ name, password }) {
-        //管理员为公共实验性账号
+    async login({ name, password }) { //管理员为公共实验性账号
         if (typeof name == "string" && typeof password == "string") {
             const query_name = await collection.admin.findOne({ name: name });
             if (query_name) {
@@ -72,9 +71,7 @@ class Admin {
         const week = this.getWeek();
         const length = week.length - 1;
 
-        for (let n = 0; n < length; n++) {
-            //不要使用promise.all
-
+        for (let n = 0; n < length; n++) {  //不要使用promise.all
             posts.date_arr[n] = await collection.posts
                 .find({
                     $and: [
@@ -83,7 +80,6 @@ class Admin {
                     ]
                 })
                 .count();
-
             user.date_arr[n] = await collection.user
                 .find({
                     $and: [
@@ -93,25 +89,18 @@ class Admin {
                 })
                 .count();
         }
-
         posts.all_count = await collection.posts.find({}).count();
         user.all_count = await collection.user.find({}).count();
         return { user, posts };
     }
 
-    async agreeArticle({ check_posts_id, state, skip }) {
-        //审核通过
-        if (
-            typeof check_posts_id == "string" &&
-            typeof state == "number" &&
-            typeof skip == "number"
-        ) {
+    async agreeArticle({ check_posts_id, state }) {  //审核通过
+        if (typeof check_posts_id == "string" && typeof state == "number") {
             const { posts_id, ...article } = await collection.checkposts.findOne({
                 _id: new ObjectId(check_posts_id)
             });
 
-            if (posts_id === undefined) {
-                //如果不是更新就创建他
+            if (posts_id === undefined) {  //如果不是更新就创建他
                 const { ops } = await collection.posts.insertOne(
                     Object.assign({}, article, {
                         author_id: new ObjectId(article.author_id),
@@ -126,11 +115,11 @@ class Admin {
                     posts_id: new ObjectId(ops[0]._id),
                     comment_count: 0,
                     comment: []
-                }); //创建文章所属子文档评论
+                });
                 await collection.user.findOneAndUpdate(
                     { _id: new ObjectId(ops[0].author_id) },
                     { $inc: { create_p_count: +1 } }
-                ); //作者创建文章+1
+                );
                 await collection.dynamic.findOneAndUpdate(
                     { user_id: new ObjectId(ops[0].author_id) },
                     {
@@ -144,75 +133,61 @@ class Admin {
                         $inc: { dynamic_count: +1 }
                     }
                 );
-                await collection.label.findOneAndUpdate(
-                    { type: article.type[0] },
-                    { $inc: { article_count: +1 } }
-                ); //为该文档类型+1
-            } else {
-                //是更新就覆盖掉posts的文档
+                await collection.label.findOneAndUpdate({ type: article.type[0] },{ $inc: { article_count: +1 } });
+            }
+            else {
                 await collection.posts.findOneAndUpdate(
                     { _id: new ObjectId(posts_id) },
                     { $set: Object.assign({}, article, { state: 2 }) }
                 );
             }
-            await collection.checkposts.findOneAndDelete({
-                _id: new ObjectId(check_posts_id)
-            }); //删除
-            if (state === 2) {
-                return this.$postsLookup({}, skip, 10);
-            } else if (state === 0 || state === 1) {
-                return this.$checkpostsLookup({ state: state }, skip);
-            }
+            await collection.checkposts.findOneAndDelete({ _id: new ObjectId(check_posts_id) }); //删除检查文章
+            return true;
         }
         throw new Error("agreeArticle");
     }
 
-    async rejectArticle({ posts_id, state, skip }) {
-        //拒绝通过文章
-        if (typeof posts_id == "string" && typeof state == "number" && skip == "number") {
+    async rejectArticle({ posts_id, state }) { //拒绝通过文章
+        if (typeof posts_id == "string" && typeof state == "number") {
             if (state === 0) {
                 await collection.checkposts.findOneAndUpdate(
                     { _id: new ObjectId(posts_id) },
                     { $set: { state: 1 } }
                 );
-                return this.$checkpostsLookup({ state: 0 }, skip);
-            } else if (state === 2) {
+            }
+            else if (state === 2) {
                 const article = await collection.posts.findOne({
                     _id: new ObjectId(posts_id)
                 }); //获取
                 await collection.checkposts.insertOne(
                     Object.assign({}, article, { posts_id: article._id, state: 1 })
                 ); //插入检查集合
-                return this.$postsLookup({}, skip, 10);
             }
+            return true;
         }
         throw new Error("rejectArticle");
     }
 
-    async AdminRemoveArticle({ posts_id, state, skip }) {
-        //管理员删除文章
+    async AdminRemoveArticle({ posts_id, state }) {  //管理员删除文章
         if (typeof posts_id == "string" && typeof state == "number") {
             if (state === 0 || state === 1) {
                 await collection.checkposts.findOneAndDelete({
                     _id: new ObjectId(posts_id)
                 });
-                return this.$checkpostsLookup({ state: 0 }, skip);
-            } else if (state === 2) {
-                const { value } = await collection.posts.findOneAndDelete({
-                    _id: new ObjectId(posts_id)
-                });
+            } 
+            else if (state === 2) {
+                const { value } = await collection.posts.findOneAndDelete({ _id: new ObjectId(posts_id) });
                 await this.r_ArticleAssociatedDocument({
                     posts_id: posts_id,
                     author_id: value.author_id
                 });
-                return this.$postsLookup({}, skip, 10);
             }
+            return true;
         }
         throw new Error("AdminRemoveArticle");
     }
 
-    async r_ArticleAssociatedDocument({ posts_id, author_id }) {
-        //删除posts集合某个文档所有关联集合文档
+    async r_ArticleAssociatedDocument({ posts_id, author_id }) {  //删除posts集合某个文档所有关联集合文档
         if (typeof posts_id == "string" && typeof author_id == "object") {
             await collection.user.findOneAndUpdate(
                 { _id: new ObjectId(author_id) },

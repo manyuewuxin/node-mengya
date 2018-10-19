@@ -54,8 +54,7 @@ class Posts {
         throw new Error("getfollowtype");
     }
 
-    async getUserPostsList({ user_id, skip, followtype }) {
-        //用户关注标签文章列表
+    async getUserPostsList({ user_id, skip, followtype }) { //用户关注标签文章列表
         if (
             typeof user_id == "string" &&
             typeof skip == "number" &&
@@ -210,12 +209,8 @@ class Posts {
         throw new Error("createArticle");
     }
 
-    async removeArticle({ posts_id, author_id, skip }) {
-        if (
-            typeof posts_id == "string" &&
-            typeof author_id == "string" &&
-            typeof skip == "number"
-        ) {
+    async removeArticle({ posts_id, author_id }) {
+        if (typeof posts_id == "string" && typeof author_id == "string") {
             await collection.posts.findOneAndDelete({ _id: new ObjectId(posts_id) });
             await collection.user.findOneAndUpdate(
                 { _id: new ObjectId(author_id) },
@@ -236,38 +231,7 @@ class Posts {
                     $inc: { dynamic_count: -1 }
                 }
             );
-
-            const count = await collection.user.findOne(
-                { _id: new ObjectId(author_id) },
-                { projection: { create_p_count: 1 } }
-            );
-            const people = await collection.posts
-                .aggregate([
-                    { $match: { author_id: new ObjectId(author_id) } },
-                    {
-                        $lookup: {
-                            from: "user",
-                            let: { author_id: "$author_id" },
-                            pipeline: [
-                                { $match: { $expr: { $eq: ["$_id", "$$author_id"] } } },
-                                {
-                                    $project: {
-                                        _id: 1,
-                                        avatar: 1,
-                                        name: 1,
-                                        information: 1
-                                    }
-                                }
-                            ],
-                            as: "author"
-                        }
-                    },
-                    { $sort: { date: -1 } },
-                    { $skip: skip },
-                    { $limit: 10 }
-                ])
-                .toArray();
-            return { people: people, count: count.create_p_count };
+            return true;
         }
         throw new Error("removeArticle");
     }
@@ -311,8 +275,7 @@ class Posts {
         throw new Error("likeArticle");
     }
 
-    async getComment({ posts_id, skip, sort }) {
-        //获取评论
+    async getComment({ posts_id, skip, sort }) { //获取评论
         if (
             typeof posts_id == "string" &&
             typeof skip == "number" &&
@@ -371,8 +334,7 @@ class Posts {
                 { $inc: { comment_count: +1 } }
             );
 
-            if (options.user.length > 1) {
-                //是否是回复用户评论
+            if (options.user.length > 1) {  //是否是回复用户评论
                 await collection.message.findOneAndUpdate(
                     { user_id: new ObjectId(options.user[1]) },
                     {
@@ -458,14 +420,12 @@ class Posts {
                     }
                 );
             }
-
             return true;
         }
         throw new Error("removeComment");
     }
 
-    goodComment({ comment_id, posts_id, user_id, action }) {
-        //点赞评论
+    goodComment({ comment_id, posts_id, user_id, action }) {  //点赞评论
         if (
             typeof comment_id == "string" &&
             typeof posts_id == "string" &&

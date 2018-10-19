@@ -180,17 +180,11 @@ class Admin {
     }
 
     async agreeArticle(req, res, next) {
-        if (req.body.posts_id && req.body.state !== undefined && req.body.page) {
+        if (req.body.posts_id && req.body.state !== undefined) {
             try {
-                const skip = this.page(req.body.page, 10);
                 const { posts_id, state } = req.body;
-                const p = await service.agreeArticle({
-                    check_posts_id: posts_id,
-                    state: state,
-                    skip: skip
-                });
-                const table = await this.addIndex(p);
-                await res.json({ table });
+                await service.agreeArticle({ check_posts_id: posts_id, state: state });
+                await res.status(200).end();
             } catch (err) {
                 next(err);
             }
@@ -200,13 +194,10 @@ class Admin {
     }
 
     async rejectArticle(req, res, next) {
-        if (req.body.posts_id && req.body.state !== undefined && req.body.page) {
+        if (req.body.posts_id && req.body.state !== undefined) {
             try {
-                const { ...options } = req.body;
-                options.skip = this.page(req.body.page, 10);
-                const p = await service.rejectArticle(options);
-                const table = await this.addIndex(p);
-                await res.json({ table });
+                await service.rejectArticle(req.body);
+                await res.status(200).end();
             } catch (err) {
                 next(err);
             }
@@ -216,13 +207,10 @@ class Admin {
     }
 
     async AdminRemoveArticle(req, res, next) {
-        if (req.body.posts_id && req.body.state !== undefined && req.body.page) {
+        if (req.body.posts_id && req.body.state !== undefined) {
             try {
-                const { ...options } = req.body;
-                options.skip = this.page(req.body.page, 10);
-                const p = await service.AdminRemoveArticle(options);
-                const table = await this.addIndex(p);
-                await res.json({ table });
+                await service.AdminRemoveArticle(req.body);
+                await res.status(200).end();
             } catch (err) {
                 next(err);
             }

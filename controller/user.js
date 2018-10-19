@@ -74,9 +74,7 @@ class User {
         }
     }
 
-    async login(req, res) {
-        //登录
-
+    async login(req, res) {  //登录
         assert(!req.session.user, "该用户已登录");
         try {
             const { ...options } = req.body;
@@ -99,16 +97,14 @@ class User {
         }
     }
 
-    signout(req, res) {
-        //退出登录
+    signout(req, res) {   //退出登录
         req.session.user = null;
         req.session.page = null;
         req.session.limit = null;
         res.status(200).end();
     }
 
-    async getAuthor(req, res, next) {
-        //获取作者信息
+    async getAuthor(req, res, next) {  //获取作者信息
         if (req.query.user_id && req.query.is_home) {
             try {
                 var author = await service.getAuthor(req.query);
@@ -121,8 +117,7 @@ class User {
         }
     }
 
-    async getMessage(req, res, next) {
-        //单独获取消息
+    async getMessage(req, res, next) {  //单独获取消息
         if (!req.session.user) return res.json({ message: null, read_count: 0 });
 
         if (req.query.page) {
@@ -139,8 +134,7 @@ class User {
         }
     }
 
-    async setMessage(req, res, next) {
-        //清空所有未读消息
+    async setMessage(req, res, next) {  //清空所有未读消息
         try {
             await service.setMessage(req.session.user);
             await res.status(200).end();
@@ -149,8 +143,7 @@ class User {
         }
     }
 
-    async getCollectList(req, res, next) {
-        //获取收藏夹列表
+    async getCollectList(req, res, next) {  //获取收藏夹列表
         if (req.query.page) {
             try {
                 const user_id = req.session.user;
@@ -167,8 +160,7 @@ class User {
         }
     }
 
-    async updateCollect(req, res, next) {
-        //收藏某个文章
+    async updateCollect(req, res, next) {  //收藏某个文章
         if (
             req.body.collect_id &&
             req.body.action &&
@@ -188,8 +180,7 @@ class User {
         }
     }
 
-    async createCollect(req, res, next) {
-        //创建收藏夹
+    async createCollect(req, res, next) {  //创建收藏夹
         if (req.body.image && req.body.name) {
             try {
                 var { ...options } = req.body;
@@ -222,9 +213,7 @@ class User {
         }
     }
 
-    async getCollectPosts(req, res, next) {
-        //获取单个收藏夹所有收藏文章
-
+    async getCollectPosts(req, res, next) { //获取单个收藏夹所有收藏文章
         if (req.params.collect_id && req.query.page) {
             try {
                 const skip = this.page(req.query.page, 10);
@@ -253,9 +242,7 @@ class User {
         }
     }
 
-    async setAccount(req, res, next) {
-        //编辑个人资料
-
+    async setAccount(req, res, next) { //编辑个人资料
         if (req.query.method && Object.keys(req.body).length > 0) {
             try {
                 const { ...data } = req.body;
@@ -277,8 +264,7 @@ class User {
         }
     }
 
-    async setFollowing(req, res, next) {
-        //关注某个用户
+    async setFollowing(req, res, next) {  //关注某个用户
         if (
             req.body.author_id &&
             req.body.action &&
@@ -297,8 +283,7 @@ class User {
         }
     }
 
-    async people(req, res, next) {
-        //获取动态
+    async people(req, res, next) { //获取动态
         if (req.query.page && req.query.user_id) {
             try {
                 const { page, user_id } = req.query;

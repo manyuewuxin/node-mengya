@@ -23,7 +23,9 @@ class Mongo {
             return this.keys(coll_arr);
         }).then((name)=>{
             this.coll_name=name;
-            this.setCollection();
+            return this.setCollection();
+        }).then(()=>{
+            console.log("已初始化数据");
         }).catch((err)=>{
             console.log(err);
         });
@@ -40,6 +42,7 @@ class Mongo {
         this.comment = await this.getCollection('comment',comment);
         this.checkposts = await this.getCollection('checkposts',checkposts);
         this.admin = await this.getCollection('admin',admin);
+        return true;
     }
 
     async getCollection(name,schema){

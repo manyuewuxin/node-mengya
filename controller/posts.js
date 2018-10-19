@@ -214,17 +214,15 @@ class Posts {
     }
 
     async removeArticle(req, res, next) {
-        if (req.body.posts_id && req.body.page) {
+        if (req.body.posts_id) {
             try {
-                const { posts_id, page } = req.body;
+                const { posts_id } = req.body;
                 const author_id = req.session.user;
-                const skip = this.page(page, 10);
                 const { people, count } = await service.removeArticle({
                     posts_id,
-                    author_id,
-                    skip
+                    author_id
                 });
-                await res.json({ people, count: Math.ceil(count / 10) });
+                await res.status(200).end();
             } catch (err) {
                 next(err);
             }

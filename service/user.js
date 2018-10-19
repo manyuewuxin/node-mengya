@@ -18,8 +18,7 @@ class User {
         return null;
     }
 
-    async login(options) {
-        //登录
+    async login(options) { //登录
         if (typeof options == "object") {
             let user = await collection.user.findOne({ [options.key]: options.value });
             if (user !== null) {
@@ -37,8 +36,7 @@ class User {
         throw new Error("login");
     }
 
-    async register(options, address) {
-        //注册
+    async register(options, address) { //注册
         if (typeof options == "object" && typeof address == "object") {
             options.avatar = "/avatar/dafault.png";
             options.date = new Date();
@@ -73,8 +71,7 @@ class User {
         throw new Error("register");
     }
 
-    async query(options) {
-        //查询用户名或邮箱是否已注册
+    async query(options) { //查询用户名或邮箱是否已注册
         if (typeof options == "object") {
             const user = await collection.user.findOne({ [options.key]: options.value });
             if (user) {
@@ -110,8 +107,7 @@ class User {
         throw new Error("getAuthor");
     }
 
-    getCollectList(options) {
-        //获取收藏夹列表，多文档
+    getCollectList(options) { //获取收藏夹列表，多文档
         if (typeof options == "object") {
             return collection.collect
                 .find({ user_id: new ObjectId(options.user_id) })
@@ -123,8 +119,7 @@ class User {
         throw new Error("getCollectList");
     }
 
-    async getCollectPosts(options) {
-        //获取某个收藏夹收藏的文章//使用$zip
+    async getCollectPosts(options) {  //获取某个收藏夹收藏的文章//使用$zip
         if (typeof options == "object") {
             const {
                 update_date,
@@ -187,8 +182,7 @@ class User {
         throw new Error("getCollectPosts");
     }
 
-    async updateCollect(options) {
-        //更新收藏夹
+    async updateCollect(options) {  //更新收藏夹
         if (typeof options == "object") {
             const { action } = options;
             const dynamic = {
@@ -232,8 +226,7 @@ class User {
         throw new Error("updateCollect");
     }
 
-    createCollect(options) {
-        //创建收藏夹
+    createCollect(options) { //创建收藏夹
         if (typeof options == "object") {
             options.user_id = new ObjectId(options.user_id);
             options.collect_count = 0;
@@ -286,8 +279,7 @@ class User {
         throw new Error("setAccount");
     }
 
-    async getMessage(options) {
-        //获取消息
+    async getMessage(options) { //获取消息
         if (typeof options == "object") {
             //const count=await collection.message.aggregate([{$match:{user_id:new ObjectId(options.user_id)}},{$project:{arr:{$filter:{input:'$message',as:'m',cond:{$eq:['$$m.read',false]}}}}}]).toArray();
             const { read_count } = await collection.message.findOne(
@@ -342,8 +334,7 @@ class User {
         throw new Error("getMessage");
     }
 
-    setMessage(user_id) {
-        //更新消息
+    setMessage(user_id) { //更新消息
         if (user_id) {
             return collection.message.findOneAndUpdate(
                 { user_id: new ObjectId(user_id) },
@@ -354,8 +345,7 @@ class User {
         throw new Error("setMessage");
     }
 
-    async peopledynamic(options) {
-        //获取动态
+    async peopledynamic(options) {  //获取动态
         if (typeof options == "object") {
             const { dynamic_count } = await collection.dynamic.findOne(
                 { user_id: new ObjectId(options.user_id) },
