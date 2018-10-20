@@ -38,8 +38,8 @@ class Admin {
     }
     addIndex(arr) {
         const list = arr.map((obj, index) => {
-            obj.key = index + 1;
             obj.index = index + 1;
+            obj.key = index;
             obj.date = this.format(obj.date);
             return obj;
         });
@@ -119,7 +119,7 @@ class Admin {
                     const table = await this.addIndex(p);
                     await res.json({ table: table, count: Math.ceil(count / 10) });
                 } else if (state === 2) {
-                    const p = await service.$postsLookup({}, skip, 10);
+                    const p = await service.$postsLookup({ state: state }, skip, 10);
                     const count = await service.getPostsCount("posts");
                     const table = await this.addIndex(p);
                     await res.json({ table: table, count: Math.ceil(count / 10) });

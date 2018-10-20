@@ -159,6 +159,9 @@ class Admin {
                 const article = await collection.posts.findOne({
                     _id: new ObjectId(posts_id)
                 }); //获取
+                await collection.posts.findOneAndDelete({
+                    _id: new ObjectId(posts_id)
+                });
                 await collection.checkposts.insertOne(
                     Object.assign({}, article, { posts_id: article._id, state: 1 })
                 ); //插入检查集合
