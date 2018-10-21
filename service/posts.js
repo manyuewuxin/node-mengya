@@ -422,8 +422,7 @@ class Posts {
                                     send_user_id: new ObjectId(options.user_id),
                                     message_type: "reply_comment"
                                 }
-                            },
-                            $inc: { read_count: -1 }
+                            }
                         }
                     );
                 }
@@ -436,8 +435,7 @@ class Posts {
                                     send_user_id: new ObjectId(options.user_id),
                                     message_type: "reply_posts"
                                 }
-                            },
-                            $inc: { read_count: -1 }
+                            }
                         }
                     );                    
                 }
