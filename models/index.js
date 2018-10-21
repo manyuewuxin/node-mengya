@@ -25,7 +25,7 @@ class Mongo {
             this.coll_name=name;
             return this.setCollection();
         }).then(()=>{
-            console.log("已初始化数据");
+            console.log("已初始化数据库");
         }).catch((err)=>{
             console.log(err);
         });

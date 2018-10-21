@@ -314,11 +314,13 @@ class Posts {
 
     async createComment(options) {
         if (typeof options == "object") {
-            const { posts_id, author_id, user_id, ...data } = options;
+            const { posts_id, author_id, user_id, text, user } = options;
 
+            const data = {};
             data.comment_id = new ObjectId();
+            data.text = text;
             data.good = [];
-            data.user.forEach((u, index, arr) => (arr[index] = new ObjectId(u)));
+            data.user = user.map(user_id => new ObjectId(user_id));
             data.date = new Date();
 
             await collection.comment.findOneAndUpdate(
@@ -334,24 +336,42 @@ class Posts {
                 { $inc: { comment_count: +1 } }
             );
 
-            if (options.user.length > 1) {  //是否是回复用户评论
-                await collection.message.findOneAndUpdate(
-                    { user_id: new ObjectId(options.user[1]) },
-                    {
-                        $push: {
-                            message: {
-                                send_user_id: new ObjectId(user_id),
-                                posts_id: new ObjectId(posts_id),
-                                message_type: "reply_comment",
-                                date: new Date()
-                            }
-                        },
-                        $inc: { read_count: +1 }
-                    }
-                );
+            if (user.length > 1) {   //是否是回复用户评论
+                if(user_id !== user[1]){   //被回复用户不是自己回复自己则发送消息
+                    await collection.message.findOneAndUpdate(
+                        { user_id: new ObjectId(user[1]) },
+                        {
+                            $push: {
+                                message: {
+                                    send_user_id: new ObjectId(user_id),
+                                    posts_id: new ObjectId(posts_id),
+                                    message_type: "reply_comment",
+                                    date: new Date()
+                                }
+                            },
+                            $inc: { read_count: +1 }
+                        }
+                    );
+                }
+                if(author_id !== user[1]){ //被回复的用户如果不是文章作者，则发送消息
+                    await collection.message.findOneAndUpdate(
+                        { user_id: new ObjectId(author_id) },
+                        {
+                            $push: {
+                                message: {
+                                    send_user_id: new ObjectId(user_id),
+                                    posts_id: new ObjectId(posts_id),
+                                    message_type: "reply_posts",
+                                    date: new Date()
+                                }
+                            },
+                            $inc: { read_count: +1 }
+                        }
+                    );                    
+                }
             }
 
-            if (user_id !== author_id) {
+            else if (user_id !== author_id) { //是回复作者？
                 await collection.message.findOneAndUpdate(
                     { user_id: new ObjectId(author_id) },
                     {
@@ -367,6 +387,7 @@ class Posts {
                     }
                 );
             }
+
             const { comment } = await this.getComment({
                 posts_id: posts_id,
                 skip: 0,
@@ -392,21 +413,37 @@ class Posts {
             );
 
             if (options.user.length > 1) {
-                await collection.message.findOneAndUpdate(
-                    { user_id: new ObjectId(options.user[1]) },
-                    {
-                        $pull: {
-                            message: {
-                                send_user_id: new ObjectId(options.user_id),
-                                message_type: "reply_comment"
-                            }
-                        },
-                        $inc: { read_count: -1 }
-                    }
-                );
+                if(options.user_id !== options.user[1]){
+                    await collection.message.findOneAndUpdate(
+                        { user_id: new ObjectId(options.user[1]) },
+                        {
+                            $pull: {
+                                message: {
+                                    send_user_id: new ObjectId(options.user_id),
+                                    message_type: "reply_comment"
+                                }
+                            },
+                            $inc: { read_count: -1 }
+                        }
+                    );
+                }
+                if(options.author_id !== options.user[1]){
+                    await collection.message.findOneAndUpdate(
+                        { user_id: new ObjectId(options.author_id) },
+                        {
+                            $pull: {
+                                message: {
+                                    send_user_id: new ObjectId(options.user_id),
+                                    message_type: "reply_posts"
+                                }
+                            },
+                            $inc: { read_count: -1 }
+                        }
+                    );                    
+                }
             }
 
-            if (options.user_id !== options.author_id) {
+            else if (options.user_id !== options.author_id) {
                 await collection.message.findOneAndUpdate(
                     { user_id: new ObjectId(options.author_id) },
                     {
