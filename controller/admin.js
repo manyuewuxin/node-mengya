@@ -1,7 +1,7 @@
 const checkLoginAdmin = require("../middlewares/checkLoginAdmin");
 const xss = require("xss");
 const service = require("../service/admin");
-const ROUTER_ERROR = "router参数错误";
+const ROUTER_ERROR = process.env.NODE_ENV === "development" ? "router参数错误" : "服务器出了点问题";
 
 class Admin {
     constructor() {

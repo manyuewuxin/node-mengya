@@ -3,7 +3,7 @@ const assert = require("assert");
 const axios = require("axios");
 const checkLogin = require("../middlewares/checkLogin");
 const service = require("../service/user");
-const ROUTER_ERROR = process.env.NODE_ENV === "development" ? "router参数错误" : "服务器除了点问题";
+const ROUTER_ERROR = process.env.NODE_ENV === "development" ? "router参数错误" : "服务器出了点问题";
 
 class User {
     constructor() {
@@ -118,7 +118,7 @@ class User {
     }
 
     async getMessage(req, res, next) {  //单独获取消息
-        if (!req.session.user) return res.json({ message: null, read_count: 0 });
+        if (!req.session.user) return res.json({ message: [], read_count: 0 });
 
         if (req.query.page) {
             try {

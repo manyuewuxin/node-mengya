@@ -13,26 +13,13 @@ const admin = require('./admin');
 
 class Mongo {
     constructor() {
-        MongoClient.connect('mongodb://localhost:27017',{useNewUrlParser:true}).then((connect)=>{
-            this.connect = connect;
-            return connect.db("mengya");
-        }).then((db)=>{
-            this.db = db;
-            return db.collections();
-        }).then((coll_arr)=>{
-            return this.keys(coll_arr);
-        }).then((name)=>{
-            this.coll_name=name;
-            return this.setCollection();
-        }).then(()=>{
-            console.log("已初始化数据库");
-        }).catch((err)=>{
-            console.log(err);
-        });
-        
+        this.init().then(()=>console.log("已初始化数据库")).catch((err)=>console.log(err)); 
     }
-
-    async setCollection(){
+    async init(){
+        this.connect = await MongoClient.connect('mongodb://localhost:27017',{useNewUrlParser:true});
+        this.db = await this.connect.db("mengya");
+        const array = await this.db.collections();
+        this.coll_name = await this.keys(array);
         this.user = await this.getCollection('user',user);
         this.collect = await this.getCollection('collect',collect);
         this.dynamic = await this.getCollection('dynamic',dynamic);
@@ -91,3 +78,22 @@ class Mongo {
 }
 
 module.exports = new Mongo();
+
+/*
+        MongoClient.connect('mongodb://localhost:27017',{useNewUrlParser:true}).then((connect)=>{
+            this.connect = connect;
+            return connect.db("mengya");
+        }).then((db)=>{
+            this.db = db;
+            return db.collections();
+        }).then((coll_arr)=>{
+            return this.keys(coll_arr);
+        }).then((name)=>{
+            this.coll_name=name;
+            return this.setCollection();
+        }).then(()=>{
+            console.log("已初始化数据库");
+        }).catch((err)=>{
+            console.log(err);
+        });  
+*/
